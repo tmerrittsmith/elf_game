@@ -43,15 +43,16 @@
     at each stage working backwards from turn 11, where elves are
     worth 0 because there are no more turns left.
 
-    Running the code below tells us that the only turns whether the
-    value of an elf is worth less than $60 is on the last two turns.
+    Running the code below tells us that the only turns where the
+    future value of an elf is worth less than $60 is on the last
+    three turns.
 
     The last question to ask is about when we should hire elves. It
     costs $75 to hire an elf, so if we expect the elves to return
     more than $75, we should hire as many as possible. We can see
-    that hiring elves is worthwhile on the first 8 turns.
+    that hiring elves is worthwhile on the first 7 turns.
 
-    So, on the last two turns - keep your cash and send all of your
+    So, on the last three turns - keep your cash and send all of your
     elves to the mountains. Otherwise, get them to the forest and
     hire as many extras as possible.
 

@@ -56,11 +56,11 @@ def play_round(game, turn, weather):
 
     if weather == "Bad":
         elves -= turn.mountain
-        funds = game.funds + turn.wood * 10
-        return Game(elves, funds, game.day + 1)
+        funds = game.funds + turn.wood * 10 - turn.hired * 75
     else:
-        funds = game.funds + 10*turn.wood + 20*turn.forest + 50*turn.mountain
-        return Game(elves, funds, game.day + 1)
+        funds = game.funds + 10*turn.wood + 20*turn.forest + 50*turn.mountain - turn.hired * 75
+
+    return Game(elves, funds, game.day + 1)
 
 
 def play_game(bot, weather):
@@ -81,7 +81,6 @@ def simulation(bots):
 
     # Randomly generate a set of weather
     weather = [choice(WEATHER) for _ in range(10)]
-    print(weather)
     
     results = {}
 
@@ -102,18 +101,27 @@ def run_simulation(bots, N):
         results = simulation(bots)
 
         # Find the winner
-        winner = ""
+        winner = set([])
         winning_funds = 0
         for name, r in results.items():
             totals[name] += r.funds
-            if r.funds > winning_funds:
-                winner = name
+            if r.funds == winning_funds:
+                winner.add(name)
+            elif r.funds > winning_funds:
+                winner = set([name])
                 winning_funds = r.funds
 
-        winners[winner] += 1
+        for w in winner:
+            winners[w] += 1
 
-    print("Winners:", winners)
-    print("Totals:", totals)
+    sorted_winners = [(key, val) for key, val in winners.items()]
+    sorted_winners.sort(key=lambda x: x[1], reverse=True)
+
+    sorted_totals = [(key, val/N) for key, val in totals.items()]
+    sorted_totals.sort(key=lambda x: x[1], reverse=True)
+
+    print("Winners:", sorted_winners)
+    print("Totals:", sorted_totals)
 
 
 
@@ -129,12 +137,13 @@ def run_simulation(bots, N):
 """
 
 
+
 def Andy_Bot(g):
     """
-    Optimal? strategy - on the last two turns, send all
+    Optimal? strategy - on the last three turns, send all
     elves to the mountain, otherwise always send them
     to the forest.
-    Hire as many elves as possible for the first 6 turns.
+    Hire as many elves as possible for the first 7 turns.
     then none after that.
     """
 
@@ -184,8 +193,8 @@ def woodland_bot(g):
     # send all elves to the woods
 
     hire = 0
-    if g.funds >= 75 and g.day < 2:
-        hire = funds // 75
+    if g.funds >= 75 and g.day <= 2:
+        hire = g.funds // 75
 
     return Turn(hire, g.elves + hire, 0, 0)
 
@@ -195,7 +204,7 @@ def jon_bot(g):
     #send 60% of elves to the woods, 10% forest and 30% mountains
     
     hire = 0
-    if g.funds >= 75 and g.day < 5:
+    if g.funds >= 75 and g.day <= 5:
         hire = g.funds // 75
 
     wood = 6*(g.elves + hire) // 10
@@ -209,11 +218,35 @@ def mountain_bot(g):
     #all elves to the mountain
     
     hire = 0
-    if g.funds >= 75 and g.day < 2:
+    if g.funds >= 75 and g.day <= 2:
         hire = g.funds // 75
     
     return Turn(hire, 0, 0, g.elves + hire)
 
+
+
+def meta_bot(h, m):
+    """ Meta bot allows the creation of a bot to test
+        strategy parameters. The bot will hire as many
+        elves as possible up until turn h. It will send
+        elves to the forest up until turn m, and then
+        send them all to the mountain after that.
+    """
+
+    def bot(g):
+
+        hire = 0
+        if g.day <= h:
+            hire = g.funds // 75
+
+        if g.day <= m:
+            return Turn(hire, 0, g.elves + hire, 0)
+        else:
+            return Turn(hire, 0, 0, g.elves + hire)
+
+    return bot
+
+            
 
 Bots = {
     "Andy": Andy_Bot,
@@ -226,4 +259,4 @@ Bots = {
 
 
 if __name__ == "__main__":
-    run_simulation(Bots, 10)
+    run_simulation(Bots, 1000)
